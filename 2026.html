@@ -4,6 +4,51 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>2026 年収</title>
+  <script>
+    (function() {
+      const PASS = 'chiha1818';
+      if (sessionStorage.getItem('auth') !== PASS) {
+        document.addEventListener('DOMContentLoaded', function() {
+          const overlay = document.getElementById('auth-overlay');
+          overlay.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
+        });
+      }
+      window.checkPassword = function() {
+        const input = document.getElementById('auth-input').value;
+        if (input === PASS) {
+          sessionStorage.setItem('auth', PASS);
+          document.getElementById('auth-overlay').style.display = 'none';
+          document.body.style.overflow = '';
+        } else {
+          document.getElementById('auth-error').style.display = 'block';
+          document.getElementById('auth-input').value = '';
+        }
+      };
+    })();
+  </script>
+  <style>
+    #auth-overlay {
+      display: none; position: fixed; inset: 0; background: #f0f0f0;
+      justify-content: center; align-items: center; z-index: 9999;
+    }
+    #auth-box {
+      background: #fff; border-radius: 16px; padding: 40px 48px;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    #auth-box h2 { font-size: 18px; color: #1a1a1a; }
+    #auth-input {
+      width: 200px; padding: 8px 12px; font-size: 16px;
+      border: 1px solid #ccc; border-radius: 8px; text-align: center;
+    }
+    #auth-btn {
+      padding: 8px 32px; background: #2AA693; color: #fff;
+      border: none; border-radius: 8px; font-size: 14px; cursor: pointer;
+    }
+    #auth-btn:hover { background: #239080; }
+    #auth-error { color: #e05050; font-size: 13px; display: none; }
+  </style>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -62,6 +107,15 @@
   </style>
 </head>
 <body>
+<div id="auth-overlay">
+  <div id="auth-box">
+    <h2>パスワードを入力</h2>
+    <input id="auth-input" type="password" placeholder="password"
+      onkeydown="if(event.key==='Enter')checkPassword()"/>
+    <button id="auth-btn" onclick="checkPassword()">ログイン</button>
+    <span id="auth-error">パスワードが違います</span>
+  </div>
+</div>
 <div class="page">
   <div class="year-switcher">
     <button onclick="changeYear(-1)">‹</button>
