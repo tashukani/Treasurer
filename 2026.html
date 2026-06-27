@@ -734,9 +734,14 @@
 
   let currentYear = 2026;
   function changeYear(delta) {
+    saveInputs();
     currentYear += delta;
     document.getElementById('yearLabel').textContent = currentYear;
     document.title = currentYear + ' 年収';
+    loadInputs();
+    updateTedori(document.getElementById('inp-tедori').value);
+    syncKurika(); syncPay(); syncGenkin(); syncToshi();
+    drawFlows();
   }
 
   function saveInputs() {
