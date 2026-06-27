@@ -739,9 +739,34 @@
     document.title = currentYear + ' 年収';
   }
 
+  function saveInputs() {
+    const key = 'treasurer_' + currentYear;
+    const data = {};
+    document.querySelectorAll('input[type="number"]').forEach(el => {
+      if (el.id) data[el.id] = el.value;
+    });
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+
+  function loadInputs() {
+    const key = 'treasurer_' + currentYear;
+    const saved = localStorage.getItem(key);
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    Object.entries(data).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
+    loadInputs();
     updateTedori(document.getElementById('inp-tедori').value);
+    syncKurika(); syncPay(); syncGenkin(); syncToshi();
     drawFlows();
+    document.querySelectorAll('input[type="number"]').forEach(el => {
+      el.addEventListener('input', saveInputs);
+    });
   });
 </script>
 </body>
