@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2026 年収</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      background: #f0f0f0;
+      padding: 24px;
+      color: #1a1a1a;
+      font-size: 14px;
+    }
+    .page {
+      background: #fff;
+      border-radius: 16px;
+      padding: 32px 40px 48px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* ── 年切り替え ── */
+    .year-switcher { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; justify-content: center; padding-bottom: 16px; border-bottom: 1px solid #e0e0e0; }
+    .year-switcher .year-label { font-size: 32px; font-weight: 700; min-width: 72px; text-align: center; }
+    .year-switcher button {
+      background: none; border: 1px solid #d0d0d0; border-radius: 8px;
+      width: 36px; height: 36px; font-size: 18px; cursor: pointer; color: #555;
+      display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+    }
+    .year-switcher button:hover { background: #f0f0f0; }
+
+    /* ── サマリーカード ── */
+    .summary { display: flex; gap: 14px; margin-bottom: 32px; }
+    .card { border: 1px solid #e0e0e0; border-radius: 10px; padding: 14px 18px 16px; min-width: 160px; }
+    .card-label { font-size: 14px; color: #666; margin-bottom: 8px; }
+    .card-label.red { color: #e05050; }
+    .card-label.teal { color: #2AA693; }
+    .card-value { font-size: 28px; font-weight: 700; }
+    .card-value span { font-size: 14px; font-weight: 400; margin-left: 4px; color: #555; }
+
+    /* ── フロー全体レイアウト ── */
+    .flow-wrapper { display: flex; gap: 24px; align-items: flex-start; }
+    .flow-svg { flex: 1; min-width: 0; overflow: visible; }
+
+    /* ── 右パネル ── */
+    .right-panel { width: 280px; flex-shrink: 0; }
+    .right-panel h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .right-panel .tax-note { font-size: 14px; color: #888; margin-bottom: 14px; }
+    .inv-card {
+      border: 1px solid #e0e0e0; border-radius: 10px; padding: 12px 14px;
+      margin-bottom: 10px; display: flex; align-items: center;
+    }
+    .inv-left { flex: 1; }
+    .inv-label { font-size: 14px; color: #555; margin-bottom: 4px; }
+    .inv-value { font-size: 26px; font-weight: 700; display: flex; align-items: baseline; gap: 4px; }
+    .inv-value span { font-size: 14px; font-weight: 400; color: #555; }
+    .inv-divider { width: 1px; background: #e0e0e0; height: 44px; margin: 0 12px; flex-shrink: 0; }
+    .inv-right { font-size: 14px; color: #888; line-height: 2; }
+    .inv-right .perf { color: #2aaa80; }
+  </style>
+</head>
+<body>
+<div class="page">
+  <div class="year-switcher">
+    <button onclick="changeYear(-1)">‹</button>
+    <div class="year-label" id="yearLabel">2026</div>
+    <button onclick="changeYear(1)">›</button>
+  </div>
+
+
+  <div class="flow-wrapper">
+    <svg class="flow-svg" viewBox="0 0 920 790" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="tealFade" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#2AA693;stop-opacity:0.5"/>
+          <stop offset="100%" style="stop-color:#2AA693;stop-opacity:0.2"/>
+        </linearGradient>
+        <linearGradient id="redFade" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#e05050;stop-opacity:0.35"/>
+          <stop offset="100%" style="stop-color:#e05050;stop-opacity:0.15"/>
+        </linearGradient>
+        <linearGradient id="grayFade" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#888;stop-opacity:0.3"/>
+          <stop offset="100%" style="stop-color:#888;stop-opacity:0.1"/>
+        </linearGradient>
+      </defs>
+
+      <!-- 列ラベル（バーより上に配置） -->
+      <text x="42" y="12" font-size="14" fill="#888">額面</text>
+      <foreignObject x="42" y="16" width="64" height="24">
+        <input xmlns="http://www.w3.org/1999/xhtml"
+          type="number" id="inp-gakumen" value="500"
+          oninput="updateGakumen(this.value)"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <text x="170" y="12" font-size="14" fill="#888">手取</text>
+      <foreignObject x="170" y="16" width="64" height="24">
+        <input xmlns="http://www.w3.org/1999/xhtml"
+          type="number" id="inp-tедori" value="32"
+          oninput="updateTedori(this.value)"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <text x="170" y="54" font-size="14" fill="#888">×12 =</text>
+      <text id="res-tедori" x="215" y="54" font-size="14" font-weight="700" fill="#555">384</text>
+
+      <!-- バー・フロー全体を44px下にシフト -->
+      <g transform="translate(0,44)">
+
+      <!-- 額面バー (teal, h=500) -->
+      <rect id="bar-gakumen" x="42" y="30" width="48" height="500" rx="0" fill="#2AA693"/>
+      <!-- 控除部分（赤, h=135） -->
+      <rect id="bar-kojyo" x="170" y="414" width="48" height="116" rx="0" fill="#e05050"/>
+      <text x="194" y="465" font-size="12" fill="#fff" text-anchor="middle">控除</text>
+      <text x="194" y="481" font-size="12" fill="#fff" text-anchor="middle"><tspan id="res-kojyo">116</tspan></text>
+      <!-- 給与手取バー (teal, h=390) -->
+      <rect id="bar-tedori" x="170" y="30" width="48" height="384" rx="0" fill="#2AA693"/>
+
+      <!-- 支出バー -->
+      <text x="298" y="-6" font-size="12" fill="#888">収入総額</text>
+      <text id="label-shishutsu" x="298" y="10" font-size="14" font-weight="700" fill="#555">384</text>
+      <rect id="bar-shishutsu" x="298" y="30" width="48" height="376" rx="0" fill="#3d4458"/>
+
+      <!-- 臨時収入 -->
+      <text id="label-rinji" x="42" y="546" font-size="14" fill="#888">臨時収入</text>
+      <foreignObject id="fo-rinji" x="42" y="550" width="64" height="24">
+        <input xmlns="http://www.w3.org/1999/xhtml"
+          type="number" id="inp-rinji" value="0"
+          oninput="updateRinji(this.value)"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <rect id="bar-rinji" x="42" y="578" width="48" height="0" rx="0" fill="#2AA693"/>
+
+      <!-- ===== 支払い方法バー ===== -->
+      <!-- 家賃（家賃カテゴリーと連動） -->
+      <text x="426" y="-6" font-size="12" fill="#e05050">支出総額</text>
+      <text id="label-shishutsu-pay" x="426" y="10" font-size="14" font-weight="700" fill="#555">342</text>
+      <rect id="bar-yachin-pay" x="426" y="30" width="48" height="120" rx="0" fill="#e05050"/>
+      <text x="450" y="83" font-size="12" fill="#fff" text-anchor="middle">家賃</text>
+      <text x="450" y="99" font-size="12" fill="#fff" text-anchor="middle"><tspan id="res-yachin-pay">120</tspan></text>
+
+      <!-- クレカ h=食+衣・物品+他・固定費 -->
+      <rect id="bar-kurika" x="426" y="155" width="48" height="120" rx="0" fill="#e05050"/>
+      <text x="450" y="208" font-size="12" fill="#fff" text-anchor="middle">クレカ</text>
+      <text x="450" y="224" font-size="12" fill="#fff" text-anchor="middle"><tspan id="res-kurika">120</tspan></text>
+
+      <!-- pay h=支払い+飲み会 -->
+      <rect id="bar-pay" x="426" y="307" width="48" height="42" rx="0" fill="#e05050"/>
+      <text x="450" y="322" font-size="12" fill="#fff" text-anchor="middle">pay</text>
+      <text x="450" y="338" font-size="12" fill="#fff" text-anchor="middle"><tspan id="res-pay">42</tspan></text>
+
+      <!-- 現金（UFJ+楽天+雑費と連動） -->
+      <rect id="bar-genkin" x="426" y="358" width="48" height="60" rx="0" fill="#e05050"/>
+      <text x="450" y="381" font-size="12" fill="#fff" text-anchor="middle">現金</text>
+      <text x="450" y="397" font-size="12" fill="#fff" text-anchor="middle"><tspan id="res-genkin">60</tspan></text>
+      <rect id="bar-diff" x="426" y="418" width="48" height="0" rx="0" fill="#2AA693"/>
+      <text id="label-diff-name" x="450" y="0" font-size="12" fill="#fff" text-anchor="middle" style="display:none">未配分</text>
+      <text id="label-diff-val" x="450" y="0" font-size="12" fill="#fff" text-anchor="middle" style="display:none"></text>
+      <text id="diff-notice" x="426" y="438" font-size="12" fill="#e05050" style="display:none"></text>
+
+
+      <!-- ===== カテゴリーバー ===== -->
+      <!-- 家賃 h=120 y=30 -->
+      <rect id="bar-yachin" x="554" y="30" width="48" height="120" rx="0" fill="#e05050"/>
+      <text x="608" y="80" font-size="12" fill="#555">家賃</text>
+      <foreignObject x="682" y="66" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml"
+          type="number" id="inp-yachin" value="10"
+          oninput="calcX12('inp-yachin','res-yachin','bar-yachin')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <text x="738" y="80" font-size="14" fill="#888">×12 =</text>
+      <text id="res-yachin" x="784" y="80" font-size="14" font-weight="700" fill="#555">120</text>
+
+      <!-- 食 h=60 y=165 -->
+      <rect id="bar-shoku" x="554" y="165" width="48" height="60" rx="0" fill="#e05050"/>
+      <text x="608" y="200" font-size="12" fill="#555">食</text>
+      <foreignObject x="682" y="186" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-shoku" value="5"
+          oninput="calcX12('inp-shoku','res-shoku','bar-shoku')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <text x="738" y="200" font-size="14" fill="#888">×12 =</text>
+      <text id="res-shoku" x="784" y="200" font-size="14" font-weight="700" fill="#555">60</text>
+
+      <!-- 衣・物品 h=36 y=229 -->
+      <rect id="bar-koromo" x="554" y="229" width="48" height="36" rx="0" fill="#e05050"/>
+      <text x="608" y="252" font-size="12" fill="#555">衣・物品</text>
+      <foreignObject x="682" y="238" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-koromo" value="3"
+          oninput="calcX12('inp-koromo','res-koromo','bar-koromo')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <text x="738" y="252" font-size="14" fill="#888">×12 =</text>
+      <text id="res-koromo" x="784" y="252" font-size="14" font-weight="700" fill="#555">36</text>
+
+      <!-- 他・固定費 h=24 y=268 -->
+      <rect id="bar-kotei" x="554" y="268" width="48" height="24" rx="0" fill="#e05050"/>
+      <text x="608" y="287" font-size="12" fill="#555">他・固定費</text>
+      <foreignObject x="682" y="273" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-kotei" value="2"
+          oninput="calcX12('inp-kotei','res-kotei','bar-kotei')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <text x="738" y="287" font-size="14" fill="#888">×12 =</text>
+      <text id="res-kotei" x="784" y="287" font-size="14" font-weight="700" fill="#555">24</text>
+
+      <!-- 支払い h=24 y=300 -->
+      <rect id="bar-shiharai" x="554" y="300" width="48" height="24" rx="0" fill="#e05050"/>
+      <text x="608" y="319" font-size="12" fill="#555">支払い</text>
+      <foreignObject x="682" y="305" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-shiharai" value="2"
+          oninput="calcX12('inp-shiharai','res-shiharai','bar-shiharai')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <text x="738" y="319" font-size="14" fill="#888">×12 =</text>
+      <text id="res-shiharai" x="784" y="319" font-size="14" font-weight="700" fill="#555">24</text>
+
+      <!-- 飲み会 h=18 y=332 -->
+      <rect id="bar-nomikai" x="554" y="332" width="48" height="18" rx="0" fill="#e05050"/>
+      <text x="608" y="346" font-size="12" fill="#555">飲み会</text>
+      <foreignObject x="682" y="332" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-nomikai" value="1.5"
+          oninput="calcX12('inp-nomikai','res-nomikai','bar-nomikai')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <text x="738" y="346" font-size="14" fill="#888">×12 =</text>
+      <text id="res-nomikai" x="784" y="346" font-size="14" font-weight="700" fill="#555">18</text>
+
+      <!-- UFJ h=30 y=358 -->
+      <rect id="bar-ufj" x="554" y="358" width="48" height="30" rx="0" fill="#e05050"/>
+      <text x="608" y="378" font-size="12" fill="#555">UFJ</text>
+      <foreignObject x="682" y="364" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-ufj" value="2.5"
+          oninput="calcX12('inp-ufj','res-ufj','bar-ufj')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <text x="738" y="378" font-size="14" fill="#888">×12 =</text>
+      <text id="res-ufj" x="784" y="378" font-size="14" font-weight="700" fill="#555">30</text>
+
+      <!-- 楽天 h=12 y=392 -->
+      <rect id="bar-rakuten14" x="554" y="392" width="48" height="12" rx="0" fill="#bbb" opacity="0.6"/>
+      <text x="608" y="406" font-size="14" fill="#888">楽天に避難</text>
+      <foreignObject x="682" y="392" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-rakuten14" value="12"
+          oninput="setDirectGenkin('inp-rakuten14','bar-rakuten14')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+
+      <!-- 雑費 h=18 y=414 -->
+      <rect id="bar-zappi" x="554" y="414" width="48" height="18" rx="0" fill="#e05050"/>
+      <text x="608" y="428" font-size="12" fill="#555">雑費</text>
+      <foreignObject x="682" y="414" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-zappi" value="1.5"
+          oninput="calcX12('inp-zappi','res-zappi','bar-zappi')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <text x="738" y="428" font-size="14" fill="#888">×12 =</text>
+      <text id="res-zappi" x="784" y="428" font-size="14" font-weight="700" fill="#555">18</text>
+
+
+      <!-- ===== 下部：貯金・投資フロー ===== -->
+      <!-- 楽天バー（直接入力） -->
+      <rect id="bar-rakuten-pay" x="426" y="480" width="48" height="132" rx="0" fill="#3d4458"/>
+      <text id="label-rakuten-pay-name" x="450" y="539" font-size="12" fill="#fff" text-anchor="middle">楽天</text>
+      <text id="label-rakuten-pay-val" x="450" y="555" font-size="12" fill="#fff" text-anchor="middle"><tspan id="res-rakuten-pay">132</tspan></text>
+      <foreignObject id="fo-rakuten-pay" x="481" y="526" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-rakuten-pay" value="132"
+          oninput="setDirect('inp-rakuten-pay','res-rakuten-pay','bar-rakuten-pay')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+
+      <!-- 楽天94 h=96 y=480 -->
+      <rect id="bar-rakuten94" x="554" y="480" width="48" height="96" rx="0" fill="#3d4458"/>
+      <text x="608" y="532" font-size="12" fill="#555">生活防衛</text>
+      <foreignObject x="682" y="518" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-rakuten94" value="96"
+          oninput="setDirect('inp-rakuten94','res-rakuten94','bar-rakuten94')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+
+      <!-- 積立（全世界+米と連動） -->
+      <rect id="bar-toshi" x="554" y="578" width="48" height="36" rx="0" fill="#2AA693"/>
+      <text x="608" y="601" font-size="14" fill="#2AA693">投資：<tspan id="res-toshi">36</tspan></text>
+
+
+      <!-- 投資→全世界24 / 米12 -->
+      <rect id="bar-sekai" x="674" y="578" width="48" height="24" rx="0" fill="#2AA693"/>
+      <text x="728" y="595" font-size="14" fill="#2AA693">全世界 <tspan id="res-sekai">24</tspan></text>
+      <foreignObject x="770" y="581" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-sekai" value="24"
+          oninput="setDirectToshi('inp-sekai','res-sekai','bar-sekai')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+
+      <rect id="bar-bei" x="674" y="606" width="48" height="12" rx="0" fill="#2AA693" opacity="0.7"/>
+      <text x="728" y="619" font-size="14" fill="#2AA693">米 <tspan id="res-bei">12</tspan></text>
+      <foreignObject x="744" y="605" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-bei" value="12"
+          oninput="setDirectToshi('inp-bei','res-bei','bar-bei')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+
+      <g id="flow-lines"></g>
+
+      </g><!-- end translate group -->
+    </svg>
+  </div>
+
+
+  <!-- ===== 積立てパネル（下部） ===== -->
+  <div class="right-panel" style="width:100%;margin-top:32px;">
+    <h3>積立て(年)</h3>
+    <p class="tax-note">無税枠(年) 120 万円</p>
+
+    <div style="display:flex;gap:14px;flex-wrap:wrap;">
+      <div class="inv-card" style="flex:1;min-width:200px;">
+        <div class="inv-left">
+          <div class="inv-label">全世界</div>
+          <div class="inv-value">24<span>万円</span></div>
+        </div>
+        <div class="inv-divider"></div>
+        <div class="inv-right">
+          予算(月) 2 万円<br>
+          パフォ <span class="perf">+18.17 %</span>
+        </div>
+      </div>
+
+      <div class="inv-card" style="flex:1;min-width:200px;">
+        <div class="inv-left">
+          <div class="inv-label">米国</div>
+          <div class="inv-value">12<span>万円</span></div>
+        </div>
+        <div class="inv-divider"></div>
+        <div class="inv-right">
+          予算(月) 1 万円<br>
+          パフォ <span class="perf">+22.16 %</span>
+        </div>
+      </div>
+
+      <div class="inv-card" style="flex:1;min-width:200px;">
+        <div class="inv-left">
+          <div class="inv-label">貯金（予算）</div>
+          <div class="inv-value">122<span>万円</span></div>
+        </div>
+        <div class="inv-divider"></div>
+        <div class="inv-right">
+          予算(年) 0 万円
+        </div>
+      </div>
+
+      <div class="inv-card" style="flex:1;min-width:200px;">
+        <div class="inv-left">
+          <div class="inv-label">貯金（済み）</div>
+          <div class="inv-value">250<span>万円</span></div>
+        </div>
+        <div class="inv-divider"></div>
+        <div class="inv-right">
+          予算(年) 0 万円
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function calcKojyo() {
+    const gakumen = parseFloat(document.getElementById('inp-gakumen').value) || 0;
+    const tedori = Math.round((parseFloat(document.getElementById('inp-tедori').value) || 0) * 12);
+    const kojyo = Math.max(0, gakumen - tedori);
+    document.getElementById('res-kojyo').textContent = kojyo;
+    const bar = document.getElementById('bar-kojyo');
+    bar.setAttribute('height', kojyo);
+    bar.setAttribute('y', 30 + tedori);
+
+    // 臨時収入の位置を額面バー底面に合わせる
+    const rinjiTop = 30 + gakumen + 16;
+    document.getElementById('label-rinji').setAttribute('y', rinjiTop + 14);
+    document.getElementById('fo-rinji').setAttribute('y', rinjiTop + 18);
+    document.getElementById('bar-rinji').setAttribute('y', rinjiTop + 46);
+
+    drawFlows();
+  }
+
+  function updateGakumen(val) {
+    const h = Math.max(0, parseFloat(val) || 0);
+    document.getElementById('bar-gakumen').setAttribute('height', h);
+    calcKojyo();
+  }
+
+  function updateTedori(val) {
+    const monthly = parseFloat(val) || 0;
+    const annual = Math.round(monthly * 12);
+    document.getElementById('res-tедori').textContent = annual;
+    document.getElementById('bar-tedori').setAttribute('height', annual);
+    syncShishutsu();
+    updateShunyuCard();
+    document.getElementById('bar-shishutsu').setAttribute('height', annual);
+    calcKojyo();
+  }
+
+  function calcX12(inputId, resultId, barId) {
+    const val = parseFloat(document.getElementById(inputId).value) || 0;
+    const annual = Math.round(val * 12);
+    document.getElementById(resultId).textContent = annual;
+    if (barId) {
+      document.getElementById(barId).setAttribute('height', annual);
+    }
+    if (inputId === 'inp-yachin') {
+      document.getElementById('bar-yachin-pay').setAttribute('height', annual);
+      document.getElementById('res-yachin-pay').textContent = annual;
+    }
+    if (['inp-shoku','inp-koromo','inp-kotei'].includes(inputId)) {
+      syncKurika();
+    }
+    if (['inp-shiharai','inp-nomikai'].includes(inputId)) {
+      syncPay();
+    }
+    if (['inp-ufj','inp-rakuten14','inp-zappi'].includes(inputId)) {
+      syncGenkin();
+    }
+    updateShishutsuCard();
+    if (['inp-sekai','inp-bei'].includes(inputId)) {
+      syncToshi();
+    }
+    drawFlows();
+  }
+
+  function syncToshi() {
+    const sum = ['inp-sekai','inp-bei'].reduce((acc, id) => {
+      return acc + (parseFloat(document.getElementById(id).value) || 0);
+    }, 0);
+    document.getElementById('bar-toshi').setAttribute('height', sum);
+    document.getElementById('res-toshi').textContent = sum;
+    checkBalance();
+    drawFlows();
+  }
+
+  function setDirect(inputId, resultId, barId) {
+    const val = Math.round(parseFloat(document.getElementById(inputId).value) || 0);
+    if (resultId) document.getElementById(resultId).textContent = val;
+    if (barId) document.getElementById(barId).setAttribute('height', val);
+    checkBalance();
+    drawFlows();
+  }
+
+  function setDirectToshi(inputId, resultId, barId) {
+    const val = Math.round(parseFloat(document.getElementById(inputId).value) || 0);
+    if (resultId) document.getElementById(resultId).textContent = val;
+    if (barId) document.getElementById(barId).setAttribute('height', val);
+    syncToshi();
+  }
+
+  function updateRinji(val) {
+    const h = Math.max(0, Math.round(parseFloat(val) || 0));
+    document.getElementById('bar-rinji').setAttribute('height', h);
+    syncShishutsu();
+    updateShunyuCard();
+    drawFlows();
+  }
+
+  function syncShishutsu() {
+    const tedori = Math.round((parseFloat(document.getElementById('inp-tедori').value) || 0) * 12);
+    const rinji = Math.max(0, Math.round(parseFloat(document.getElementById('inp-rinji').value) || 0));
+    const total = tedori + rinji;
+    document.getElementById('bar-shishutsu').setAttribute('height', total);
+    const lbl = document.getElementById('label-shishutsu');
+    if (lbl) lbl.textContent = total;
+  }
+
+  function updateShunyuCard() {
+    const tedori = Math.round((parseFloat(document.getElementById('inp-tедori').value) || 0) * 12);
+    const rinji = Math.max(0, Math.round(parseFloat(document.getElementById('inp-rinji').value) || 0));
+    const el = document.getElementById('card-tedori');
+    if (el) el.textContent = tedori + rinji;
+  }
+
+  function updateShishutsuCard() {
+    const sum =
+      +document.getElementById('bar-yachin-pay').getAttribute('height') +
+      +document.getElementById('bar-kurika').getAttribute('height') +
+      +document.getElementById('bar-pay').getAttribute('height') +
+      +document.getElementById('bar-genkin').getAttribute('height');
+    const cardEl = document.getElementById('card-shishutsu');
+    if (cardEl) cardEl.textContent = sum;
+    const lbl = document.getElementById('label-shishutsu-pay');
+    if (lbl) lbl.textContent = sum;
+
+    const tedori = +document.getElementById('bar-shishutsu').getAttribute('height');
+    const diff = Math.max(0, tedori - sum);
+    const genkin = document.getElementById('bar-genkin');
+    const genkinBottom = +genkin.getAttribute('y') + +genkin.getAttribute('height') + 8;
+    const barDiff = document.getElementById('bar-diff');
+    barDiff.setAttribute('y', genkinBottom);
+    barDiff.setAttribute('height', diff);
+    const labelName = document.getElementById('label-diff-name');
+    const labelVal  = document.getElementById('label-diff-val');
+    if (diff > 0) {
+      const cy = genkinBottom + diff / 2;
+      labelName.setAttribute('y', cy - 7); labelName.removeAttribute('style');
+      labelVal.setAttribute('y',  cy + 9); labelVal.textContent = diff; labelVal.removeAttribute('style');
+    } else {
+      labelName.setAttribute('style', 'display:none');
+      labelVal.setAttribute('style',  'display:none');
+    }
+
+    // bar-rakuten-payをbar-diffの下に配置
+    const rakutenPayBar = document.getElementById('bar-rakuten-pay');
+    const rakutenPayH = +rakutenPayBar.getAttribute('height');
+    const newRakutenY = genkinBottom + diff + 8;
+    rakutenPayBar.setAttribute('y', newRakutenY);
+    document.getElementById('label-rakuten-pay-name').setAttribute('y', newRakutenY + 59);
+    document.getElementById('label-rakuten-pay-val').setAttribute('y',  newRakutenY + 75);
+    document.getElementById('fo-rakuten-pay').setAttribute('y', newRakutenY + 46);
+  }
+
+  function checkBalance() {
+    const tedori = Math.round((parseFloat(document.getElementById('inp-tедori').value) || 0) * 12);
+    const paymentSum =
+      +document.getElementById('bar-yachin-pay').getAttribute('height') +
+      +document.getElementById('bar-kurika').getAttribute('height') +
+      +document.getElementById('bar-pay').getAttribute('height') +
+      +document.getElementById('bar-genkin').getAttribute('height') +
+      +document.getElementById('bar-rakuten-pay').getAttribute('height');
+    const diff = tedori - paymentSum;
+    const notice = document.getElementById('balance-notice');
+    if (diff !== 0) {
+      notice.textContent = `差異: 手取 ${tedori}万 − 支出・貯金合計 ${paymentSum}万 = ${diff > 0 ? '+' : ''}${diff}万`;
+      notice.style.display = 'block';
+    } else {
+      notice.style.display = 'none';
+    }
+  }
+
+  function updateViewBox() {
+    const svg = document.querySelector('.flow-svg');
+    const barIds = ['bar-gakumen','bar-tedori','bar-kojyo','bar-shishutsu',
+      'bar-yachin-pay','bar-kurika','bar-pay','bar-genkin','bar-rakuten-pay',
+      'bar-yachin','bar-shoku','bar-koromo','bar-kotei','bar-shiharai','bar-nomikai',
+      'bar-ufj','bar-rakuten14','bar-zappi','bar-rakuten94','bar-toshi',
+      'bar-sekai','bar-bei'];
+    let maxBottom = 0;
+    barIds.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        const bottom = (+el.getAttribute('y') || 0) + (+el.getAttribute('height') || 0) + 16;
+        maxBottom = Math.max(maxBottom, bottom);
+      }
+    });
+    svg.setAttribute('viewBox', `0 0 920 ${maxBottom + 32}`);
+  }
+
+  function setDirectGenkin(inputId, barId) {
+    const val = Math.round(parseFloat(document.getElementById(inputId).value) || 0);
+    document.getElementById(barId).setAttribute('height', val);
+    syncGenkin();
+  }
+
+  function syncGenkin() {
+    const ufj   = Math.round((parseFloat(document.getElementById('inp-ufj').value)   || 0) * 12);
+    const r14   = Math.round( parseFloat(document.getElementById('inp-rakuten14').value) || 0);
+    const zappi = Math.round((parseFloat(document.getElementById('inp-zappi').value)  || 0) * 12);
+    const sum = ufj + r14 + zappi;
+    document.getElementById('bar-genkin').setAttribute('height', sum);
+    document.getElementById('res-genkin').textContent = sum;
+    drawFlows();
+  }
+
+  function syncPay() {
+    const sum = ['inp-shiharai','inp-nomikai'].reduce((acc, id) => {
+      return acc + Math.round((parseFloat(document.getElementById(id).value) || 0) * 12);
+    }, 0);
+    document.getElementById('bar-pay').setAttribute('height', sum);
+    document.getElementById('res-pay').textContent = sum;
+    drawFlows();
+  }
+
+  function syncKurika() {
+    const sum = ['inp-shoku','inp-koromo','inp-kotei'].reduce((acc, id) => {
+      return acc + Math.round((parseFloat(document.getElementById(id).value) || 0) * 12);
+    }, 0);
+    document.getElementById('bar-kurika').setAttribute('height', sum);
+    document.getElementById('res-kurika').textContent = sum;
+    drawFlows();
+  }
+
+  function drawFlows() {
+    const g = document.getElementById('flow-lines');
+    if (!g) return;
+    g.innerHTML = '';
+    const NS = 'http://www.w3.org/2000/svg';
+
+    function b(id) {
+      const el = document.getElementById(id);
+      if (!el) return null;
+      return { x: +el.getAttribute('x'), y: +el.getAttribute('y'),
+               w: +el.getAttribute('width'), h: +el.getAttribute('height') };
+    }
+
+    function lines(x1, y1, x2, y2, h, color, alpha) {
+      if (h <= 0) return;
+      const mx = (x1 + x2) / 2;
+      let d = '';
+      for (let i = 0; i < h; i++)
+        d += `M${x1},${y1+i}C${mx},${y1+i},${mx},${y2+i},${x2},${y2+i}`;
+      const p = document.createElementNS(NS, 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('stroke', color);
+      p.setAttribute('stroke-width', '1');
+      p.setAttribute('fill', 'none');
+      p.setAttribute('opacity', alpha);
+      g.appendChild(p);
+    }
+
+    const TEAL = '#2AA693', SALMON = '#e09090', RED = '#e05050', GRAY = '#aaaaaa';
+    const gakumen    = b('bar-gakumen'),     kojyo     = b('bar-kojyo');
+    const tedori     = b('bar-tedori'),      shishutsu = b('bar-shishutsu');
+    const yachinPay  = b('bar-yachin-pay'),  kurika    = b('bar-kurika');
+    const payBar     = b('bar-pay'),         genkin    = b('bar-genkin');
+    const yachin     = b('bar-yachin'),      shoku     = b('bar-shoku');
+    const koromo     = b('bar-koromo'),      kotei     = b('bar-kotei');
+    const shiharai   = b('bar-shiharai'),    nomikai   = b('bar-nomikai');
+    const ufj        = b('bar-ufj'),         rakuten14 = b('bar-rakuten14');
+    const zappi      = b('bar-zappi');
+    const rakutenPay = b('bar-rakuten-pay'), rakuten94 = b('bar-rakuten94');
+    const toshi      = b('bar-toshi'),       sekai     = b('bar-sekai');
+    const bei        = b('bar-bei');
+
+    if (!tedori || !shishutsu) return;
+
+    // 額面→手取
+    lines(gakumen.x+gakumen.w, tedori.y, tedori.x, tedori.y, tedori.h, TEAL, 0.3);
+    // 額面→控除（赤）
+    if (kojyo) lines(gakumen.x+gakumen.w, kojyo.y, kojyo.x, kojyo.y, kojyo.h, RED, 0.3);
+    // 臨時収入→支出
+    const rinji = b('bar-rinji');
+    if (rinji && rinji.h > 0)
+      lines(rinji.x+rinji.w, rinji.y, shishutsu.x, shishutsu.y+shishutsu.h-rinji.h, rinji.h, TEAL, 0.3);
+    // 手取→支出
+    lines(tedori.x+tedori.w, tedori.y, shishutsu.x, shishutsu.y, Math.min(tedori.h, shishutsu.h), TEAL, 0.3);
+    // 支出→支払い方法（積み上げ式で重なりなし）
+    let sOff = 0;
+    lines(shishutsu.x+shishutsu.w, shishutsu.y+sOff, yachinPay.x, yachinPay.y, yachinPay.h, SALMON, 0.3); sOff += yachinPay.h;
+    lines(shishutsu.x+shishutsu.w, shishutsu.y+sOff, kurika.x,    kurika.y,    kurika.h,    SALMON, 0.3); sOff += kurika.h;
+    lines(shishutsu.x+shishutsu.w, shishutsu.y+sOff, payBar.x,    payBar.y,    payBar.h,    SALMON, 0.3); sOff += payBar.h;
+    lines(shishutsu.x+shishutsu.w, shishutsu.y+sOff, genkin.x,    genkin.y,    genkin.h,    SALMON, 0.3); sOff += genkin.h;
+    // 支出→差分（緑）
+    const diff = b('bar-diff');
+    if (diff && diff.h > 0)
+      lines(shishutsu.x+shishutsu.w, shishutsu.y+sOff, diff.x, diff.y, diff.h, TEAL, 0.3);
+    // 家賃pay→家賃カテゴリー
+    lines(yachinPay.x+yachinPay.w, yachinPay.y, yachin.x, yachin.y, yachin.h, SALMON, 0.3);
+    // クレカ→食+衣+他
+    let off = 0;
+    for (const bar of [shoku, koromo, kotei]) {
+      lines(kurika.x+kurika.w, kurika.y+off, bar.x, bar.y, bar.h, SALMON, 0.3); off += bar.h;
+    }
+    // pay→支払い+飲み会
+    off = 0;
+    for (const bar of [shiharai, nomikai]) {
+      lines(payBar.x+payBar.w, payBar.y+off, bar.x, bar.y, bar.h, SALMON, 0.3); off += bar.h;
+    }
+    // 現金→UFJ+楽天+雑費
+    off = 0;
+    for (const [bar, col] of [[ufj,SALMON],[rakuten14,GRAY],[zappi,SALMON]]) {
+      lines(genkin.x+genkin.w, genkin.y+off, bar.x, bar.y, bar.h, col, 0.3); off += bar.h;
+    }
+    // 楽天pay→楽天94+積立
+    lines(rakutenPay.x+rakutenPay.w, rakutenPay.y,             rakuten94.x, rakuten94.y, rakuten94.h, GRAY, 0.3);
+    lines(rakutenPay.x+rakutenPay.w, rakutenPay.y+rakuten94.h, toshi.x,     toshi.y,     toshi.h,     TEAL, 0.3);
+    // 積立→全世界+米
+    lines(toshi.x+toshi.w, toshi.y,          sekai.x, sekai.y, sekai.h, TEAL, 0.3);
+    lines(toshi.x+toshi.w, toshi.y+sekai.h,  bei.x,   bei.y,   bei.h,   TEAL, 0.3);
+
+    updateViewBox();
+    updateShishutsuCard();
+    checkBalance();
+  }
+
+  let currentYear = 2026;
+  function changeYear(delta) {
+    currentYear += delta;
+    document.getElementById('yearLabel').textContent = currentYear;
+    document.title = currentYear + ' 年収';
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateTedori(document.getElementById('inp-tедori').value);
+    drawFlows();
+  });
+</script>
+</body>
+</html>
