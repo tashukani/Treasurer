@@ -214,7 +214,7 @@
       <rect id="bar-genkin" x="426" y="358" width="48" height="60" rx="0" fill="#e05050"/>
       <text x="450" y="381" font-size="12" fill="#fff" text-anchor="middle">現金</text>
       <text x="450" y="397" font-size="12" fill="#fff" text-anchor="middle"><tspan id="res-genkin">60</tspan></text>
-      <rect id="bar-diff" x="426" y="418" width="48" height="0" rx="0" fill="#2AA693"/>
+      <rect id="bar-diff" x="426" y="418" width="48" height="0" rx="0" fill="#aaaaaa"/>
       <text id="label-diff-name" x="450" y="0" font-size="12" fill="#fff" text-anchor="middle" style="display:none">未配分</text>
       <text id="label-diff-val" x="450" y="0" font-size="12" fill="#fff" text-anchor="middle" style="display:none"></text>
       <text id="diff-notice" x="426" y="438" font-size="12" fill="#e05050" style="display:none"></text>
@@ -300,24 +300,29 @@
       <text id="res-ufj" x="784" y="378" font-size="14" font-weight="700" fill="#555">30</text>
 
       <!-- 楽天 h=12 y=392 -->
-      <rect id="bar-rakuten14" x="554" y="392" width="48" height="12" rx="0" fill="#bbb" opacity="0.6"/>
-      <text x="608" y="406" font-size="14" fill="#888">楽天に避難</text>
+      <!-- 雑費 h=18 y=392 -->
+      <rect id="bar-zappi" x="554" y="392" width="48" height="18" rx="0" fill="#e05050"/>
+      <text x="608" y="406" font-size="12" fill="#555">雑費</text>
       <foreignObject x="682" y="392" width="52" height="22">
-        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-rakuten14" value="12"
-          oninput="setDirectGenkin('inp-rakuten14','bar-rakuten14')"
-          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
-      </foreignObject>
-
-      <!-- 雑費 h=18 y=414 -->
-      <rect id="bar-zappi" x="554" y="414" width="48" height="18" rx="0" fill="#e05050"/>
-      <text x="608" y="428" font-size="12" fill="#555">雑費</text>
-      <foreignObject x="682" y="414" width="52" height="22">
         <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-zappi" value="1.5"
           oninput="calcX12('inp-zappi','res-zappi','bar-zappi')"
           style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
       </foreignObject>
-      <text x="738" y="428" font-size="14" fill="#888">×12 =</text>
-      <text id="res-zappi" x="784" y="428" font-size="14" font-weight="700" fill="#555">18</text>
+      <text x="738" y="406" font-size="14" fill="#888">×12 =</text>
+      <text id="res-zappi" x="784" y="406" font-size="14" font-weight="700" fill="#555">18</text>
+
+      <rect id="bar-rakuten14" x="554" y="420" width="48" height="12" rx="0" fill="#bbb" opacity="0.6"/>
+      <text x="608" y="434" font-size="14" fill="#888">楽天に避難</text>
+      <foreignObject x="682" y="420" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-rakuten14" value="12"
+          oninput="setDirectGenkin('inp-rakuten14','bar-rakuten14')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+      <foreignObject x="740" y="418" width="160" height="26">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="text" id="memo-rakuten14" placeholder="メモ"
+          oninput="saveInputs()"
+          style="width:100%;height:100%;font-size:11px;border:1px solid #ddd;border-radius:3px;padding:1px 6px;color:#888;background:#fafafa;"/>
+      </foreignObject>
 
 
       <!-- ===== 下部：貯金・投資フロー ===== -->
@@ -344,6 +349,9 @@
       <rect id="bar-toshi" x="554" y="578" width="48" height="36" rx="0" fill="#2AA693"/>
       <text x="608" y="601" font-size="14" fill="#2AA693">投資：<tspan id="res-toshi">36</tspan></text>
 
+      <!-- 未配分（楽天pay − r14 − r94 − toshi） -->
+      <rect id="bar-mibunpai" x="554" y="614" width="48" height="0" rx="0" fill="#bbb" opacity="0.7"/>
+      <text id="label-mibunpai" x="608" y="628" font-size="12" fill="#888" display="none">未配分 <tspan id="res-mibunpai">0</tspan></text>
 
       <!-- 投資→全世界24 / 米12 -->
       <rect id="bar-sekai" x="674" y="578" width="48" height="24" rx="0" fill="#2AA693"/>
@@ -364,7 +372,7 @@
 
       <rect id="bar-sonota" x="674" y="638" width="48" height="100" rx="0" fill="#2AA693" opacity="0.5"/>
       <text x="728" y="695" font-size="14" fill="#2AA693">投資中</text>
-      <foreignObject x="614" y="637" width="52" height="22">
+      <foreignObject x="674" y="742" width="52" height="22">
         <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-sonota" value="100"
           oninput="setDirect('inp-sonota','res-sonota','bar-sonota')"
           style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
@@ -497,10 +505,40 @@
     drawFlows();
   }
 
+  function updateMibunpai() {
+    const rakutenPay = parseFloat(document.getElementById('inp-rakuten-pay').value) || 0;
+    const r14   = parseFloat(document.getElementById('inp-rakuten14').value) || 0;
+    const r94   = parseFloat(document.getElementById('inp-rakuten94').value) || 0;
+    const toshi = parseFloat(document.getElementById('card-yosan-val').textContent) || 0;
+    const diff  = Math.round(rakutenPay - r14 - r94 - toshi);
+    const h     = Math.max(0, diff);
+    const toshiBar = document.getElementById('bar-toshi');
+    const toshiY   = parseFloat(toshiBar ? toshiBar.getAttribute('y') : 578) || 578;
+    const toshiH   = parseFloat(toshiBar ? toshiBar.getAttribute('height') : 0) || 0;
+    const newY  = toshiY + toshiH + 8;
+    const bar   = document.getElementById('bar-mibunpai');
+    const label = document.getElementById('label-mibunpai');
+    const res   = document.getElementById('res-mibunpai');
+    if (bar)   { bar.setAttribute('y', newY); bar.setAttribute('height', h); }
+    if (label) { label.setAttribute('y', newY + 14); label.setAttribute('display', h <= 0 ? 'none' : ''); }
+    if (res)   res.textContent = diff;
+  }
+
   function setDirect(inputId, resultId, barId) {
     const val = Math.round(parseFloat(document.getElementById(inputId).value) || 0);
     if (resultId) { const r = document.getElementById(resultId); if (r) r.textContent = val; }
-    if (barId) document.getElementById(barId).setAttribute('height', val);
+    if (barId) {
+      const bar = document.getElementById(barId);
+      bar.setAttribute('height', val);
+      // inp-sonotaのinputを常にbar底辺+4pxに追従させる
+      if (barId === 'bar-sonota') {
+        const fo = document.getElementById('inp-sonota').parentNode;
+        if (fo) {
+          const barY = parseFloat(bar.getAttribute('y')) || 638;
+          fo.setAttribute('y', barY + val + 4);
+        }
+      }
+    }
     checkBalance();
     drawFlows();
   }
@@ -607,7 +645,7 @@
       'bar-yachin-pay','bar-kurika','bar-pay','bar-genkin','bar-rakuten-pay',
       'bar-yachin','bar-shoku','bar-koromo','bar-kotei','bar-shiharai','bar-nomikai',
       'bar-ufj','bar-rakuten14','bar-zappi','bar-rakuten94','bar-toshi',
-      'bar-sekai','bar-bei','bar-sonota'];
+      'bar-sekai','bar-bei','bar-sonota','bar-mibunpai'];
     let maxBottom = 0;
     barIds.forEach(id => {
       const el = document.getElementById(id);
@@ -656,6 +694,8 @@
   }
 
   function drawFlows() {
+    updateToshiSum();
+    updateMibunpai();
     const g = document.getElementById('flow-lines');
     if (!g) return;
     g.innerHTML = '';
@@ -696,6 +736,7 @@
     const rakutenPay = b('bar-rakuten-pay'), rakuten94 = b('bar-rakuten94');
     const toshi      = b('bar-toshi'),       sekai     = b('bar-sekai');
     const bei        = b('bar-bei'),         sonota    = b('bar-sonota');
+    const mibunpai   = b('bar-mibunpai');
 
     if (!tedori || !shishutsu) return;
 
@@ -718,7 +759,7 @@
     // 支出→差分（緑）
     const diff = b('bar-diff');
     if (diff && diff.h > 0)
-      lines(shishutsu.x+shishutsu.w, shishutsu.y+sOff, diff.x, diff.y, diff.h, TEAL, 0.3);
+      lines(shishutsu.x+shishutsu.w, shishutsu.y+sOff, diff.x, diff.y, diff.h, GRAY, 0.3);
     // 家賃pay→家賃カテゴリー
     lines(yachinPay.x+yachinPay.w, yachinPay.y, yachin.x, yachin.y, yachin.h, SALMON, 0.3);
     // クレカ→食+衣+他
@@ -733,12 +774,15 @@
     }
     // 現金→UFJ+楽天+雑費
     off = 0;
-    for (const [bar, col] of [[ufj,SALMON],[rakuten14,GRAY],[zappi,SALMON]]) {
+    for (const [bar, col] of [[ufj,SALMON],[zappi,SALMON],[rakuten14,GRAY]]) {
       lines(genkin.x+genkin.w, genkin.y+off, bar.x, bar.y, bar.h, col, 0.3); off += bar.h;
     }
-    // 楽天pay→楽天94+積立
-    lines(rakutenPay.x+rakutenPay.w, rakutenPay.y,             rakuten94.x, rakuten94.y, rakuten94.h, GRAY, 0.3);
-    lines(rakutenPay.x+rakutenPay.w, rakutenPay.y+rakuten94.h, toshi.x,     toshi.y,     toshi.h,     TEAL, 0.3);
+    // 楽天pay→楽天に避難+楽天94+積立+未配分
+    lines(rakutenPay.x+rakutenPay.w, rakutenPay.y,                               rakuten14.x,  rakuten14.y,  rakuten14.h,  GRAY, 0.3);
+    lines(rakutenPay.x+rakutenPay.w, rakutenPay.y+rakuten14.h,                   rakuten94.x,  rakuten94.y,  rakuten94.h,  GRAY, 0.3);
+    lines(rakutenPay.x+rakutenPay.w, rakutenPay.y+rakuten14.h+rakuten94.h,       toshi.x,      toshi.y,      toshi.h,      TEAL, 0.3);
+    if (mibunpai && mibunpai.h > 0)
+      lines(rakutenPay.x+rakutenPay.w, rakutenPay.y+rakuten14.h+rakuten94.h+toshi.h, mibunpai.x, mibunpai.y, mibunpai.h, GRAY, 0.2);
     // 積立→全世界+米
     lines(toshi.x+toshi.w, toshi.y,          sekai.x, sekai.y, sekai.h, TEAL, 0.3);
     lines(toshi.x+toshi.w, toshi.y+sekai.h,  bei.x,   bei.y,   bei.h,   TEAL, 0.3);
@@ -816,7 +860,7 @@
   function saveInputs() {
     const key = 'treasurer_' + currentYear;
     const data = {};
-    document.querySelectorAll('input[type="number"]').forEach(el => {
+    document.querySelectorAll('input[type="number"], input[type="text"]').forEach(el => {
       if (el.id) data[el.id] = el.value;
     });
     localStorage.setItem(key, JSON.stringify(data));
@@ -836,6 +880,11 @@
     Object.entries(DEFAULT_INPUTS).forEach(([id, val]) => {
       const el = document.getElementById(id);
       if (el) el.value = val;
+    });
+    // テキストメモをリセット
+    ['memo-rakuten14'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
     });
     // 保存済みがあれば上書き
     const key = 'treasurer_' + currentYear;
