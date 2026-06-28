@@ -499,7 +499,7 @@
 
   function setDirect(inputId, resultId, barId) {
     const val = Math.round(parseFloat(document.getElementById(inputId).value) || 0);
-    if (resultId) document.getElementById(resultId).textContent = val;
+    if (resultId) { const r = document.getElementById(resultId); if (r) r.textContent = val; }
     if (barId) document.getElementById(barId).setAttribute('height', val);
     checkBalance();
     drawFlows();
@@ -507,7 +507,7 @@
 
   function setDirectToshi(inputId, resultId, barId) {
     const val = Math.round(parseFloat(document.getElementById(inputId).value) || 0);
-    if (resultId) document.getElementById(resultId).textContent = val;
+    if (resultId) { const r = document.getElementById(resultId); if (r) r.textContent = val; }
     if (barId) document.getElementById(barId).setAttribute('height', val);
     const cardMap = { 'inp-sekai': 'card-sekai', 'inp-bei': 'card-bei' };
     if (cardMap[inputId]) {
