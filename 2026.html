@@ -102,8 +102,12 @@
     .inv-label { font-size: 14px; color: #555; margin-bottom: 4px; }
     .inv-value { font-size: 26px; font-weight: 700; display: flex; align-items: baseline; gap: 4px; }
     .inv-value span { font-size: 14px; font-weight: 400; color: #555; }
+    .inv-value #card-sekai, .inv-value #card-bei, .inv-value #card-yosan-val { font-size: 26px; font-weight: 700; color: inherit; }
     .inv-divider { width: 1px; background: #e0e0e0; height: 44px; margin: 0 12px; flex-shrink: 0; }
-    .inv-right { font-size: 14px; color: #888; line-height: 2; }
+    .inv-right { font-size: 14px; color: #888; }
+    .inv-right .inv-label { margin-bottom: 4px; }
+    .inv-right .inv-value { font-size: 26px; font-weight: 700; color: #1a1a1a; display: flex; align-items: baseline; gap: 4px; }
+    .inv-right .inv-value span { font-size: 14px; font-weight: 400; color: #555; }
     .inv-right .perf { color: #2aaa80; }
   </style>
 </head>
@@ -358,6 +362,14 @@
           style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
       </foreignObject>
 
+      <rect id="bar-sonota" x="674" y="638" width="48" height="100" rx="0" fill="#2AA693" opacity="0.5"/>
+      <text x="728" y="695" font-size="14" fill="#2AA693">投資中</text>
+      <foreignObject x="614" y="637" width="52" height="22">
+        <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-sonota" value="100"
+          oninput="setDirect('inp-sonota','res-sonota','bar-sonota')"
+          style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
+      </foreignObject>
+
       <g id="flow-lines"></g>
 
       </g><!-- end translate group -->
@@ -367,7 +379,7 @@
 
 
   <!-- ===== 積立てパネル（下部） ===== -->
-  <div class="right-panel" style="width:100%;margin-top:32px;">
+  <div class="right-panel" id="right-panel" style="width:100%;margin-top:32px;">
     <h3>積立て(年)</h3>
     <p class="tax-note">無税枠(年) 120 万円</p>
 
@@ -375,7 +387,7 @@
       <div class="inv-card" style="flex:1;min-width:200px;">
         <div class="inv-left">
           <div class="inv-label">全世界</div>
-          <div class="inv-value">24<span>万円</span></div>
+          <div class="inv-value"><span id="card-sekai">24</span><span>万円</span></div>
         </div>
         <div class="inv-divider"></div>
         <div class="inv-right">
@@ -387,7 +399,7 @@
       <div class="inv-card" style="flex:1;min-width:200px;">
         <div class="inv-left">
           <div class="inv-label">米国</div>
-          <div class="inv-value">12<span>万円</span></div>
+          <div class="inv-value"><span id="card-bei">12</span><span>万円</span></div>
         </div>
         <div class="inv-divider"></div>
         <div class="inv-right">
@@ -398,25 +410,16 @@
 
       <div class="inv-card" style="flex:1;min-width:200px;">
         <div class="inv-left">
-          <div class="inv-label">貯金（予算）</div>
-          <div class="inv-value">122<span>万円</span></div>
+          <div class="inv-label" id="label-yosan">予算3年分</div>
+          <div class="inv-value"><span id="card-yosan-val">122</span><span>万円</span></div>
         </div>
         <div class="inv-divider"></div>
         <div class="inv-right">
-          予算(年) 0 万円
+          <div class="inv-label">投資済み</div>
+          <div class="inv-value"><span id="card-toshi-sum">0</span><span>万円</span></div>
         </div>
       </div>
 
-      <div class="inv-card" style="flex:1;min-width:200px;">
-        <div class="inv-left">
-          <div class="inv-label">貯金（済み）</div>
-          <div class="inv-value">250<span>万円</span></div>
-        </div>
-        <div class="inv-divider"></div>
-        <div class="inv-right">
-          予算(年) 0 万円
-        </div>
-      </div>
     </div>
   </div>
 </div>
@@ -506,6 +509,12 @@
     const val = Math.round(parseFloat(document.getElementById(inputId).value) || 0);
     if (resultId) document.getElementById(resultId).textContent = val;
     if (barId) document.getElementById(barId).setAttribute('height', val);
+    const cardMap = { 'inp-sekai': 'card-sekai', 'inp-bei': 'card-bei' };
+    if (cardMap[inputId]) {
+      const c = document.getElementById(cardMap[inputId]);
+      if (c) c.textContent = val;
+    }
+    updateToshiSum();
     syncToshi();
   }
 
@@ -598,7 +607,7 @@
       'bar-yachin-pay','bar-kurika','bar-pay','bar-genkin','bar-rakuten-pay',
       'bar-yachin','bar-shoku','bar-koromo','bar-kotei','bar-shiharai','bar-nomikai',
       'bar-ufj','bar-rakuten14','bar-zappi','bar-rakuten94','bar-toshi',
-      'bar-sekai','bar-bei'];
+      'bar-sekai','bar-bei','bar-sonota'];
     let maxBottom = 0;
     barIds.forEach(id => {
       const el = document.getElementById(id);
@@ -686,7 +695,7 @@
     const zappi      = b('bar-zappi');
     const rakutenPay = b('bar-rakuten-pay'), rakuten94 = b('bar-rakuten94');
     const toshi      = b('bar-toshi'),       sekai     = b('bar-sekai');
-    const bei        = b('bar-bei');
+    const bei        = b('bar-bei'),         sonota    = b('bar-sonota');
 
     if (!tedori || !shishutsu) return;
 
@@ -749,6 +758,59 @@
     updateTedori(document.getElementById('inp-tедori').value);
     syncKurika(); syncPay(); syncGenkin(); syncToshi();
     drawFlows();
+    updateYosanLabel();
+    updateRightPanelVisibility();
+    const cs = document.getElementById('card-sekai'); if(cs) cs.textContent = document.getElementById('inp-sekai').value;
+    const cb = document.getElementById('card-bei');   if(cb) cb.textContent = document.getElementById('inp-bei').value;
+    updateToshiSum();
+  }
+
+  function updateToshiSum() {
+    const el = document.getElementById('card-toshi-sum');
+    if (!el) return;
+    if (currentYear <= 2026) {
+      el.textContent = 0;
+      const rem = document.getElementById('card-yosan-val');
+      if (rem) rem.textContent = 122;
+      const barToshi = document.getElementById('bar-toshi');
+      const resToshi = document.getElementById('res-toshi');
+      if (barToshi) barToshi.setAttribute('height', 122);
+      if (resToshi) resToshi.textContent = 122;
+      return;
+    }
+    let total = 0;
+    for (let y = 2027; y <= currentYear; y++) {
+      if (y === currentYear) {
+        total += (parseFloat(document.getElementById('inp-sekai').value) || 0)
+               + (parseFloat(document.getElementById('inp-bei').value)   || 0);
+      } else {
+        const saved = localStorage.getItem('treasurer_' + y);
+        if (saved) {
+          const d = JSON.parse(saved);
+          total += (parseFloat(d['inp-sekai']) || 0) + (parseFloat(d['inp-bei']) || 0);
+        }
+      }
+    }
+    el.textContent = Math.round(total);
+    const base = 122;
+    const remaining = Math.round(base - total);
+    const rem = document.getElementById('card-yosan-val');
+    if (rem) rem.textContent = remaining;
+    const barToshi = document.getElementById('bar-toshi');
+    const resToshi = document.getElementById('res-toshi');
+    if (barToshi) barToshi.setAttribute('height', Math.max(0, remaining));
+    if (resToshi) resToshi.textContent = Math.max(0, remaining);
+  }
+
+  function updateRightPanelVisibility() {
+    const el = document.getElementById('right-panel');
+    if (el) el.style.display = currentYear <= 2025 ? 'none' : '';
+  }
+
+  function updateYosanLabel() {
+    const map = { 2027: '予算2年分', 2028: '予算1年分' };
+    const el = document.getElementById('label-yosan');
+    if (el) el.textContent = currentYear >= 2029 ? '予算0年分' : (map[currentYear] || '予算3年分');
   }
 
   function saveInputs() {
@@ -766,7 +828,7 @@
     'inp-kotei': 2, 'inp-shiharai': 2, 'inp-nomikai': 1.5,
     'inp-ufj': 2.5, 'inp-rakuten14': 12, 'inp-zappi': 1.5,
     'inp-rakuten-pay': 132, 'inp-rakuten94': 96,
-    'inp-sekai': 24, 'inp-bei': 12
+    'inp-sekai': 24, 'inp-bei': 12, 'inp-sonota': 100
   };
 
   function loadInputs() {
@@ -791,6 +853,11 @@
     updateTedori(document.getElementById('inp-tедori').value);
     syncKurika(); syncPay(); syncGenkin(); syncToshi();
     drawFlows();
+    updateYosanLabel();
+    updateRightPanelVisibility();
+    const cs = document.getElementById('card-sekai'); if(cs) cs.textContent = document.getElementById('inp-sekai').value;
+    const cb = document.getElementById('card-bei');   if(cb) cb.textContent = document.getElementById('inp-bei').value;
+    updateToshiSum();
     document.querySelectorAll('input[type="number"]').forEach(el => {
       el.addEventListener('input', saveInputs);
     });
