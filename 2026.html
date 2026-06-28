@@ -753,7 +753,22 @@
     localStorage.setItem(key, JSON.stringify(data));
   }
 
+  const DEFAULT_INPUTS = {
+    'inp-gakumen': 500, 'inp-tедori': 32, 'inp-rinji': 0,
+    'inp-yachin': 10, 'inp-shoku': 5, 'inp-koromo': 3,
+    'inp-kotei': 2, 'inp-shiharai': 2, 'inp-nomikai': 1.5,
+    'inp-ufj': 2.5, 'inp-rakuten14': 12, 'inp-zappi': 1.5,
+    'inp-rakuten-pay': 132, 'inp-rakuten94': 96,
+    'inp-sekai': 24, 'inp-bei': 12
+  };
+
   function loadInputs() {
+    // まずデフォルト値にリセット
+    Object.entries(DEFAULT_INPUTS).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el) el.value = val;
+    });
+    // 保存済みがあれば上書き
     const key = 'treasurer_' + currentYear;
     const saved = localStorage.getItem(key);
     if (!saved) return;
