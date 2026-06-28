@@ -86,11 +86,12 @@
     .card-value span { font-size: 14px; font-weight: 400; margin-left: 4px; color: #555; }
 
     /* ── フロー全体レイアウト ── */
-    .flow-wrapper { display: flex; gap: 24px; align-items: flex-start; }
-    .flow-svg { flex: 1; min-width: 0; overflow: visible; }
+    .flow-wrapper { display: flex; flex-direction: column; gap: 24px; }
+    .svg-container { position: relative; width: 100%; }
+    .flow-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: visible; display: block; }
 
     /* ── 右パネル ── */
-    .right-panel { width: 280px; flex-shrink: 0; }
+    .right-panel { width: 100%; }
     .right-panel h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
     .right-panel .tax-note { font-size: 14px; color: #888; margin-bottom: 14px; }
     .inv-card {
@@ -125,7 +126,8 @@
 
 
   <div class="flow-wrapper">
-    <svg class="flow-svg" viewBox="0 0 920 790" xmlns="http://www.w3.org/2000/svg">
+    <div class="svg-container" id="svg-container">
+    <svg class="flow-svg" viewBox="0 0 920 900" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="tealFade" x1="0%" y1="0%" x2="100%" y2="0%">
           <stop offset="0%" style="stop-color:#2AA693;stop-opacity:0.5"/>
@@ -319,7 +321,7 @@
       <rect id="bar-rakuten-pay" x="426" y="480" width="48" height="132" rx="0" fill="#3d4458"/>
       <text id="label-rakuten-pay-name" x="450" y="539" font-size="12" fill="#fff" text-anchor="middle">楽天</text>
       <text id="label-rakuten-pay-val" x="450" y="555" font-size="12" fill="#fff" text-anchor="middle"><tspan id="res-rakuten-pay">132</tspan></text>
-      <foreignObject id="fo-rakuten-pay" x="481" y="526" width="52" height="22">
+      <foreignObject id="fo-rakuten-pay" x="366" y="526" width="52" height="22">
         <input xmlns="http://www.w3.org/1999/xhtml" type="number" id="inp-rakuten-pay" value="132"
           oninput="setDirect('inp-rakuten-pay','res-rakuten-pay','bar-rakuten-pay')"
           style="width:100%;height:100%;font-size:12px;border:1px solid #ccc;border-radius:3px;padding:1px 4px;text-align:right;"/>
@@ -360,6 +362,7 @@
 
       </g><!-- end translate group -->
     </svg>
+    </div><!-- end svg-container -->
   </div>
 
 
@@ -579,11 +582,13 @@
       +document.getElementById('bar-rakuten-pay').getAttribute('height');
     const diff = tedori - paymentSum;
     const notice = document.getElementById('balance-notice');
-    if (diff !== 0) {
-      notice.textContent = `差異: 手取 ${tedori}万 − 支出・貯金合計 ${paymentSum}万 = ${diff > 0 ? '+' : ''}${diff}万`;
-      notice.style.display = 'block';
-    } else {
-      notice.style.display = 'none';
+    if (notice) {
+      if (diff !== 0) {
+        notice.textContent = `差異: 手取 ${tedori}万 − 支出・貯金合計 ${paymentSum}万 = ${diff > 0 ? '+' : ''}${diff}万`;
+        notice.style.display = 'block';
+      } else {
+        notice.style.display = 'none';
+      }
     }
   }
 
@@ -602,7 +607,9 @@
         maxBottom = Math.max(maxBottom, bottom);
       }
     });
-    svg.setAttribute('viewBox', `0 0 920 ${maxBottom + 32}`);
+    const h = maxBottom + 32;
+    svg.setAttribute('viewBox', `0 0 920 ${h}`);
+    document.getElementById('svg-container').style.paddingBottom = (h / 920 * 100) + '%';
   }
 
   function setDirectGenkin(inputId, barId) {
@@ -727,8 +734,8 @@
     lines(toshi.x+toshi.w, toshi.y,          sekai.x, sekai.y, sekai.h, TEAL, 0.3);
     lines(toshi.x+toshi.w, toshi.y+sekai.h,  bei.x,   bei.y,   bei.h,   TEAL, 0.3);
 
-    updateViewBox();
     updateShishutsuCard();
+    updateViewBox();
     checkBalance();
   }
 
